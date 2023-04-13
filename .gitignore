@@ -1,0 +1,16 @@
+node_modules
+.keystone
+.keystone/admin
+
+.keystone/admin/next
+.keystone/admin/pages
+.keystone/admin/public
+admin
+
+.next
+/.next
+/log
+cache
+build
+
+
