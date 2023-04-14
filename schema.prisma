@@ -12,23 +12,38 @@ generator client {
 }
 
 model User {
-  id       String @id @default(cuid())
-  name     String @default("")
-  email    String @unique @default("")
-  posts    Post[] @relation("Post_author")
-  password String
+  id              String  @id @default(cuid())
+  name            String  @default("")
+  email           String  @unique @default("")
+  password        String
+  from_Order_user Order[] @relation("Order_user")
 }
 
-model Post {
-  id               String  @id @default(cuid())
-  title            String  @default("")
-  author           User?   @relation("Post_author", fields: [authorId], references: [id])
-  authorId         String? @map("author")
-  avatar_filesize  Int?
-  avatar_extension String?
-  avatar_width     Int?
-  avatar_height    Int?
-  avatar_id        String?
+model Category {
+  id                    String    @id @default(cuid())
+  name                  String    @default("")
+  valid                 Boolean   @default(false)
+  from_Product_category Product[] @relation("Product_category")
+}
 
-  @@index([authorId])
+model Product {
+  id                 String    @id @default(cuid())
+  name               String    @default("")
+  price              String    @default("")
+  category           Category? @relation("Product_category", fields: [categoryId], references: [id])
+  categoryId         String?   @map("category")
+  from_Order_product Order[]   @relation("Order_product")
+
+  @@index([categoryId])
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  user      User?    @relation("Order_user", fields: [userId], references: [id])
+  userId    String?  @map("user")
+  product   Product? @relation("Order_product", fields: [productId], references: [id])
+  productId String?  @map("product")
+
+  @@index([userId])
+  @@index([productId])
 }
