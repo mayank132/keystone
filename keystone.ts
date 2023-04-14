@@ -1,14 +1,55 @@
 import { config, list } from "@keystone-6/core";
 import { allowAll } from "@keystone-6/core/access";
 import { text } from "@keystone-6/core/fields";
-import { relationship, password, image, file ,checkbox } from "@keystone-6/core/fields";
+import { relationship, password, image, file ,checkbox ,string,boolean} from "@keystone-6/core/fields";
 import dotenv from "dotenv";
-import { withAuth, session } from "./auth";
+import { statelessSessions } from '@keystone-6/core/session';
+import { createAuth } from '@keystone-6/auth';
 import Jimp from "jimp";
 import path from "path";
+import { type } from "os";
+
 // import kk from './images/demo.png'
 
 dotenv.config();
+
+const { withAuth } = createAuth({
+  listKey: 'User',
+  identityField: 'email',
+  secretField: 'password',
+  sessionData: 'isAdmin',
+});
+
+const session = statelessSessions({
+  secret: '-- EXAMPLE COOKIE SECRET; CHANGE ME --',
+});
+
+// const Session = {
+//   data: {
+//     id: string,
+//     isAdmin: boolean
+//   }
+// }
+
+
+type Session = {
+  data: {
+    id: string;
+    isAdmin: boolean;
+  }
+}
+
+const isAdmin = ({ session }: { session: Session }) => session?.data.isAdmin;
+
+const filterPosts = ({ session }: { session: Session }) => {
+  // if the user is an Admin, they can access all the records
+
+    console.log('mob',session)
+  
+  if (session?.data.isAdmin) return true;
+  // otherwise, filter for published posts
+  return { valid: { equals: false } };
+}
 
  const lists = {
   User: list({
@@ -18,15 +59,25 @@ dotenv.config();
       email: text({ validation: { isRequired: true }, isIndexed: "unique" }),
       // posts: relationship({ ref: "Post.author", many: true }),
       password: password({ validation: { isRequired: true } }),
+      isAdmin: checkbox(),
     },
   }),
   Category: list({
-    access: allowAll,
+    access: {
+      operation: {
+        create: isAdmin,
+        update: isAdmin,
+        delete: isAdmin,
+      },
+       filter: {
+      query: filterPosts,
+    }
+    },
     fields: {
       name: text({ validation: { isRequired: true } }),
       valid: checkbox(),
       // email: text({ validation: { isRequired: true }, isIndexed: "unique" }),
-      // posts: relationship({ ref: "Post.author", many: true }),
+      // posts: rel ationship({ ref: "Post.author", many: true }),
       // password: password({ validation: { isRequired: true } }),
     },
   }),
@@ -140,36 +191,30 @@ const {
   ASSET_BASE_URL: baseUrl = "http://localhost:3000",
 } = process.env;
 
-export default config({
-  db: {
-    provider: "postgresql",
-    url: "postgres://postgres:welcome@localhost:5432/postgres",
-  },
-  lists,
-  storage: {
-    // The key here will be what is referenced in the image field
-    my_local_images: {
-      // Images that use this store will be stored on the local machine
-      kind: "local",
-      // This store is used for the image field type
-      type: "image",
-      // The URL that is returned in the Keystone GraphQL API
-      generateUrl: (path) => `${baseUrl}/images${path}`,
-      // The route that will be created in Keystone's backend to serve the images
-      serverRoute: {
-        path: "/images",
-      },
-      storagePath: "public/images",
-      sizes: {
-        sm: 360,
-        md: 720,
-        lg: 1280,
-
-        // optional
-        // if specified, a base64 data url will be generated from an image resized to this number of pixels
-        // see: https://nextjs.org/docs/api-reference/next/image#blurdataurl for potential uses
-        base64: 10,
+export default  withAuth(
+  config({
+    db: {
+      provider: "postgresql",
+      url: "postgres://postgres:welcome@localhost:5432/postgres",
+    },
+    lists,
+    session,
+    storage: {
+      // The key here will be what is referenced in the image field
+      my_local_images: {
+        // Images that use this store will be stored on the local machine
+        kind: "local",
+        // This store is used for the image field type
+        type: "image",
+        // The URL that is returned in the Keystone GraphQL API
+        generateUrl: (path) => `${baseUrl}/images${path}`,
+        // The route that will be created in Keystone's backend to serve the images
+        serverRoute: {
+          path: "/images",
+        },
+        storagePath: "public/images",
       },
     },
-  },
-});
+  })
+
+);

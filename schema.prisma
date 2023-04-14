@@ -16,6 +16,7 @@ model User {
   name            String  @default("")
   email           String  @unique @default("")
   password        String
+  isAdmin         Boolean @default(false)
   from_Order_user Order[] @relation("Order_user")
 }
 
