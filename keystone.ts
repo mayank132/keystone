@@ -57,10 +57,29 @@ const filterPosts = ({ session }: { session: Session }) => {
     access: allowAll,
     fields: {
       name: text({ validation: { isRequired: true } }),
-      email: text({ validation: { isRequired: true }, isIndexed: "unique" }),
-      posts: relationship({ ref: "Post.author", many: true }),
+      email: text({ validation: { isRequired: true },
+        hooks: {
+          validateInput: ({ addValidationError, resolvedData, fieldKey }) => {
+            const email = resolvedData[fieldKey];
+            if (email !== undefined && email !== null && !email.includes('@')) {
+              addValidationError(`The email address ${email} provided for the field ${fieldKey} must contain an '@' character`);
+            }
+          },
+        },
+        isIndexed: "unique" }),
+      posts: relationship({          ref: "Post.author", many: true, }  ),
       password: password({ validation: { isRequired: true } }),
       isAdmin: checkbox(),
+    },
+    hooks: {
+      beforeOperation: ({ operation, item }) => {
+            console.log( 'seeing', item)
+      },
+      afterOperation: ({ operation, item }) => {
+        if (operation === 'create') {
+          console.log(`New user created. Name: ${item.name}, Email: ${item.email}`);
+        }
+      }
     },
   }),
   Category: list({
@@ -131,6 +150,14 @@ const filterPosts = ({ session }: { session: Session }) => {
     },
 
     hooks: {
+      validateInput: ({ resolvedData, addValidationError }) => {
+        const { title } = resolvedData;
+      console.log('LLL',title)
+        if (title === '') {
+          // We call addValidationError to indicate an invalid value.
+          addValidationError('The title of a blog post cannot be the empty string');
+        }
+      },
       afterOperation: ({ operation, item }) => {
         console.log("item", item);
         if (operation === "create" || operation ===  "update" ) {
@@ -193,9 +220,17 @@ const filterPosts = ({ session }: { session: Session }) => {
       },
       resolveInput: ({ resolvedData }) => {
         console.log("ll");
-        const { title, avatar } = resolvedData;
-
+        const { title } = resolvedData;
+        if (title) {
+          return {
+            ...resolvedData,
+            // Ensure the first letter of the title is capitalised
+            title: title[0].toUpperCase() + title.slice(1)
+          }
+        }
+        // We always return resolvedData from the resolveInput hook
         return resolvedData;
+
       },
     },
   }),
