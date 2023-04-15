@@ -15,6 +15,7 @@ model User {
   id              String  @id @default(cuid())
   name            String  @default("")
   email           String  @unique @default("")
+  posts           Post[]  @relation("Post_author")
   password        String
   isAdmin         Boolean @default(false)
   from_Order_user Order[] @relation("Order_user")
@@ -28,14 +29,11 @@ model Category {
 }
 
 model Product {
-  id                 String    @id @default(cuid())
-  name               String    @default("")
-  price              String    @default("")
-  category           Category? @relation("Product_category", fields: [categoryId], references: [id])
-  categoryId         String?   @map("category")
-  from_Order_product Order[]   @relation("Order_product")
-
-  @@index([categoryId])
+  id                 String     @id @default(cuid())
+  name               String     @default("")
+  price              String     @default("")
+  category           Category[] @relation("Product_category")
+  from_Order_product Order[]    @relation("Order_product")
 }
 
 model Order {
@@ -47,4 +45,20 @@ model Order {
 
   @@index([userId])
   @@index([productId])
+}
+
+model Post {
+  id               String  @id @default(cuid())
+  content          Json    @default("[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]")
+  title            String  @default("")
+  author           User?   @relation("Post_author", fields: [authorId], references: [id])
+  authorId         String? @map("author")
+  isComplete       Boolean @default(false)
+  avatar_filesize  Int?
+  avatar_extension String?
+  avatar_width     Int?
+  avatar_height    Int?
+  avatar_id        String?
+
+  @@index([authorId])
 }

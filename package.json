@@ -4,6 +4,15 @@
   "main": "index.js",
   "author": "mayank",
   "license": "MIT",
+  "scripts": {
+    "build": "keystone build",
+    "dev": "keystone dev",
+    "postinstall": "keystone postinstall",
+    "generate": "keystone prisma migrate dev",
+    "start1": "keystone start --with-migrations",
+    "deploy": "keystone build && keystone prisma migrate deploy",
+    "start": "keystone start"
+  },
   "dependencies": {
     "@k6-contrib/fields-s3-images": "^5.0.0",
     "@keystone-6/auth": "^7.0.0",
