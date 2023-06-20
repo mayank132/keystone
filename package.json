@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "keystone build",
-    "dev": "keystone dev",
+    "keystone:dev": "keystone dev ",
     "postinstall": "keystone postinstall",
     "generate": "keystone prisma migrate dev",
     "start1": "keystone start --with-migrations",

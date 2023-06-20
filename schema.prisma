@@ -11,54 +11,32 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id              String  @id @default(cuid())
-  name            String  @default("")
-  email           String  @unique @default("")
-  posts           Post[]  @relation("Post_author")
-  password        String
-  isAdmin         Boolean @default(false)
-  from_Order_user Order[] @relation("Order_user")
+model Company {
+  id       String    @id @default(cuid())
+  name     String    @default("")
+  email    String    @unique @default("")
+  products Product[] @relation("Company_products")
+  vendors  Vendor[]  @relation("Company_vendors")
+}
+
+model Product {
+  id                    String     @id @default(cuid())
+  name                  String     @default("")
+  price                 String     @default("")
+  category              Category[] @relation("Product_category")
+  from_Company_products Company[]  @relation("Company_products")
 }
 
 model Category {
   id                    String    @id @default(cuid())
   name                  String    @default("")
-  valid                 Boolean   @default(false)
   from_Product_category Product[] @relation("Product_category")
 }
 
-model Product {
-  id                 String     @id @default(cuid())
-  name               String     @default("")
-  price              String     @default("")
-  category           Category[] @relation("Product_category")
-  from_Order_product Order[]    @relation("Order_product")
-}
-
-model Order {
-  id        String   @id @default(cuid())
-  user      User?    @relation("Order_user", fields: [userId], references: [id])
-  userId    String?  @map("user")
-  product   Product? @relation("Order_product", fields: [productId], references: [id])
-  productId String?  @map("product")
-
-  @@index([userId])
-  @@index([productId])
-}
-
-model Post {
-  id               String  @id @default(cuid())
-  content          Json    @default("[{\"type\":\"paragraph\",\"children\":[{\"text\":\"\"}]}]")
-  title            String  @default("")
-  author           User?   @relation("Post_author", fields: [authorId], references: [id])
-  authorId         String? @map("author")
-  isComplete       Boolean @default(false)
-  avatar_filesize  Int?
-  avatar_extension String?
-  avatar_width     Int?
-  avatar_height    Int?
-  avatar_id        String?
-
-  @@index([authorId])
+model Vendor {
+  id                   String    @id @default(cuid())
+  name                 String    @default("")
+  email                String    @unique @default("")
+  phone                String    @unique @default("")
+  from_Company_vendors Company[] @relation("Company_vendors")
 }
